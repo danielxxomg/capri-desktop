@@ -39,7 +39,7 @@ namespace CapriDesktop
             if (chat != null && File.Exists(chat))
             {
                 DateTime at;
-                if (ChatAt(chat, out at) && now - at > TimeSpan.FromDays(ChatDays))
+                if (ChatAt(chat, out at) && now.ToUniversalTime() - at > TimeSpan.FromDays(ChatDays))
                 {
                     try { File.Delete(chat); chats++; }
                     catch (IOException) { }
@@ -68,7 +68,12 @@ namespace CapriDesktop
             catch (SerializationException) { return false; }
             catch (System.Xml.XmlException) { return false; }
             catch (Exception) { return false; }
-            return saved != null && saved.At != null && DateTime.TryParse(saved.At, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out at);
+            DateTimeOffset stamp;
+            if (saved == null || saved.At == null || !DateTimeOffset.TryParse(saved.At, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out stamp)) return false;
+            // The same instant, whatever offset it was saved with, so an hour of daylight saving or another time zone
+            // can't age a chat past seven days before it is.
+            at = stamp.UtcDateTime;
+            return true;
         }
 
         // True when every brace opened is closed and no quote is left hanging, so a half-written file can't pass
