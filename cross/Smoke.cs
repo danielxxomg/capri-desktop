@@ -896,6 +896,14 @@ namespace CapriDesktop
                 if (!pruned || !chatsKept || !allKept || !guardedKept || !zones)
                     throw new Exception("Retention went wrong: pruned " + pruned + ", chats kept " + chatsKept + ", keep all " + allKept + ", guarded " + guardedKept + ", zones " + zones);
                 checks.Add("PASS retention: a day older than a year and a chat older than a week go, a day exactly a year old, a chat six days and 23 hours old in any time zone, a recent chat, a nested or uppercase sighting, a half-written file and a file without her own time all stay, and Keep all history keeps everything");
+                bool keepAllWas = pet.Saved.KeepAllHistory;
+                pet.SetKeepAll(true);
+                bool keepAllSaved = pet.Saved.KeepAllHistory;
+                pet.SetKeepAll(false);
+                keepAllSaved = keepAllSaved && !pet.Saved.KeepAllHistory;
+                pet.SetKeepAll(keepAllWas);
+                if (!keepAllSaved) throw new Exception("Keep all history didn't save in her settings.");
+                checks.Add("PASS keep all history: the Memory Vault switch saves the choice that stops her deleting chats and transcripts");
                 // Her recall cache keeps a bounded set of days and forgets the ones she no longer has; the shared word
                 // set is bounded too, so a long history can't grow it until the app closes.
                 string dugDir = Path.Combine(folder, "dug-" + Guid.NewGuid().ToString("N"));

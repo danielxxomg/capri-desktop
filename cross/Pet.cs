@@ -3462,6 +3462,13 @@ namespace CapriDesktop
             Sync();
         }
 
+        internal void SetKeepAll(bool on)
+        {
+            Saved.KeepAllHistory = on;
+            Save();
+            Sync();
+        }
+
         internal bool Remembers { get { return memoriesItem.IsChecked; } }
 
         // memories.md opens in their editor, made first if it isn't there yet. Her transcripts are in the folder beside it.

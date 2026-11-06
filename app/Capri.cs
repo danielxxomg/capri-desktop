@@ -6083,6 +6083,7 @@ namespace CapriDesktop
         }
 
         internal bool Remembers { get { return preferences.Remembers; } }
+        internal bool KeepsAll { get { return preferences.KeepAllHistory; } }
 
         internal bool ClipsOn { get { return preferences.ClipGames; } }
 
@@ -6121,6 +6122,12 @@ namespace CapriDesktop
             Brain.Keeping = preferences.Remembers;
             SavePreferences();
             mainframe.Sync();
+        }
+
+        internal void SetKeepAll(bool on)
+        {
+            preferences.KeepAllHistory = on;
+            SavePreferences();
         }
 
         private static readonly double[] WanderPaces = { 3, 1, 0.45, 0.18 };
