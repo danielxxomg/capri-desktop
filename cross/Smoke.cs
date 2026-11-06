@@ -902,8 +902,14 @@ namespace CapriDesktop
                 pet.SetKeepAll(false);
                 keepAllSaved = keepAllSaved && !pet.Saved.KeepAllHistory;
                 pet.SetKeepAll(keepAllWas);
-                if (!keepAllSaved) throw new Exception("Keep all history didn't save in her settings.");
-                checks.Add("PASS keep all history: the Memory Vault switch saves the choice that stops her deleting chats and transcripts");
+                string halfSettings = Path.Combine(folder, "half-settings-" + Guid.NewGuid().ToString("N") + ".json");
+                File.WriteAllText(halfSettings, "{\"KeepAllHistory\":true");
+                bool halfSkipped = !Retention.WholeFile(halfSettings);
+                File.WriteAllText(halfSettings, "{\"KeepAllHistory\":true}");
+                bool wholeRead = Retention.WholeFile(halfSettings);
+                File.Delete(halfSettings);
+                if (!keepAllSaved || !halfSkipped || !wholeRead) throw new Exception("Keep all history didn't save, or half-written settings weren't treated as unreadable.");
+                checks.Add("PASS keep all history: the Memory Vault switch saves the choice that stops her deleting chats and transcripts, and half-written settings are left alone");
                 // Her recall cache keeps a bounded set of days and forgets the ones she no longer has; the shared word
                 // set is bounded too, so a long history can't grow it until the app closes.
                 string dugDir = Path.Combine(folder, "dug-" + Guid.NewGuid().ToString("N"));
@@ -928,6 +934,9 @@ namespace CapriDesktop
                     for (int i = 0; i < 3; i++) File.Delete(Path.Combine(dugDir, dugDay.AddDays(-i).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + ".md"));
                     Brain.Recalled("remember when we tested retention");
                     dugForgotten = Brain.DugHeld == 1;
+                    Directory.Delete(dugDir, true);
+                    Brain.Recalled("remember when we tested retention");
+                    dugForgotten = dugForgotten && Brain.DugHeld == 0;
                     Brain.SharedCap = 2;
                     Brain.Recalled("remember when alpha beta gamma delta");
                     sharedBounded = Brain.SharedHeld <= 2;
@@ -939,7 +948,7 @@ namespace CapriDesktop
                     Brain.DugDays = dugDaysWas;
                     Brain.DugBytes = dugBytesWas;
                     Brain.SharedCap = sharedCapWas;
-                    Directory.Delete(dugDir, true);
+                    if (Directory.Exists(dugDir)) Directory.Delete(dugDir, true);
                 }
                 if (!dugTrimmed || !dugForgotten || !sharedBounded)
                     throw new Exception("Her recall cache went wrong: trimmed " + dugTrimmed + ", forgotten " + dugForgotten + ", shared " + sharedBounded);

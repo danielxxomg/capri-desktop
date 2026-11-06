@@ -1338,8 +1338,8 @@ namespace CapriDesktop
             }
             string[] days;
             try { days = Directory.GetFiles(TranscriptPath, "????-??-??.md"); }
-            catch (IOException) { return moments; }
-            catch (UnauthorizedAccessException) { return moments; }
+            catch (IOException) { lock (dug) TrimDug(); return moments; }
+            catch (UnauthorizedAccessException) { lock (dug) TrimDug(); return moments; }
             Array.Sort(days, StringComparer.Ordinal);
             lock (dug)
                 foreach (string day in days)
@@ -1363,6 +1363,7 @@ namespace CapriDesktop
                         kept = new Dug { Stamp = stamp, Lines = read, Bytes = DugSize(read) };
                         dugBytes += kept.Bytes;
                         dug[day] = kept;
+                        if (dug.Count > DugDays || dugBytes > DugBytes) TrimDug();
                     }
                     kept.Used = DateTime.UtcNow.Ticks;
                     moments.AddRange(kept.Lines);

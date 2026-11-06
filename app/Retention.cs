@@ -78,6 +78,13 @@ namespace CapriDesktop
 
         // True when every brace opened is closed and no quote is left hanging, so a half-written file can't pass
         // for a whole one and lose itself to a sweep.
+        internal static bool WholeFile(string path)
+        {
+            try { return Whole(File.ReadAllText(path)); }
+            catch (IOException) { return false; }
+            catch (UnauthorizedAccessException) { return false; }
+        }
+
         private static bool Whole(string text)
         {
             int depth = 0;

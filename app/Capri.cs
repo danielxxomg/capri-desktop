@@ -2371,7 +2371,7 @@ namespace CapriDesktop
             Brain.Digging = !smoke;
             if (!smoke) Brain.Keeper = brain;
             if (!smoke) brain.Load(Path.Combine(data, "chat.json"));
-            if (!smoke && unreadableNotice == null) Retention.Sweep(Brain.TranscriptPath, Path.Combine(data, "chat.json"), preferences.KeepAllHistory, DateTime.Now);
+            if (!smoke && unreadableNotice == null && Retention.WholeFile(settingsPath)) Retention.Sweep(Brain.TranscriptPath, Path.Combine(data, "chat.json"), preferences.KeepAllHistory, DateTime.Now);
             Voice.Loudness = Math.Max(0, Math.Min(150, preferences.Volume));
             VoiceFx.Pitch = Math.Max(-VoiceFx.MostPitch, Math.Min(VoiceFx.MostPitch, preferences.VoicePitch));
             VoiceFx.Speed = Math.Max(VoiceFx.Slowest, Math.Min(VoiceFx.Fastest, preferences.VoiceSpeed));
