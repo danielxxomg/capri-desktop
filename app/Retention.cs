@@ -1,7 +1,9 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 
 namespace CapriDesktop
 {
@@ -47,17 +49,48 @@ namespace CapriDesktop
             return "Removed " + days + " old transcripts and " + chats + " old chats.";
         }
 
-        // When they last talked, as saved in chat.json. A file without a readable time is left alone.
+        // When they last talked, from the same chat file she loads. A file she can't read, or one without a readable
+        // time, is left alone: only the chat's own top-level time counts, never a sighting's or a nested one.
         private static bool ChatAt(string path, out DateTime at)
         {
             at = DateTime.MinValue;
-            string text;
-            try { text = File.ReadAllText(path); }
+            SavedChat saved;
+            try
+            {
+                string text = File.ReadAllText(path);
+                // A file that stops halfway is not a chat she can date, even when the serializer reads part of it.
+                if (!Whole(text)) return false;
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
+                using (MemoryStream stream = new MemoryStream(bytes)) saved = (SavedChat)new DataContractJsonSerializer(typeof(SavedChat)).ReadObject(stream);
+            }
             catch (IOException) { return false; }
             catch (UnauthorizedAccessException) { return false; }
-            Match found = Regex.Match(text, "\"At\"\\s*:\\s*\"([^\"]+)\"");
-            if (!found.Success) return false;
-            return DateTime.TryParse(found.Groups[1].Value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out at);
+            catch (SerializationException) { return false; }
+            catch (System.Xml.XmlException) { return false; }
+            catch (Exception) { return false; }
+            return saved != null && saved.At != null && DateTime.TryParse(saved.At, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out at);
+        }
+
+        // True when every brace opened is closed and no quote is left hanging, so a half-written file can't pass
+        // for a whole one and lose itself to a sweep.
+        private static bool Whole(string text)
+        {
+            int depth = 0;
+            bool quoted = false, escaped = false;
+            foreach (char c in text ?? "")
+            {
+                if (quoted)
+                {
+                    if (escaped) { escaped = false; continue; }
+                    if (c == '\\') { escaped = true; continue; }
+                    if (c == '"') quoted = false;
+                    continue;
+                }
+                if (c == '"') quoted = true;
+                else if (c == '{') depth++;
+                else if (c == '}') { depth--; if (depth < 0) return false; }
+            }
+            return !quoted && depth == 0;
         }
     }
 }

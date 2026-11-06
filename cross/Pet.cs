@@ -569,7 +569,7 @@ namespace CapriDesktop
             VoiceFx.Layers = LayersOf(Saved);
             if (Program.Smoke == null) Sfx.Out = Limbs.Sound;
             if (Program.Smoke == null) Brain.Load(Path.Combine(folder, "chat.json"));
-            if (Program.Smoke == null) Retention.Sweep(Brain.TranscriptPath, Path.Combine(folder, "chat.json"), Saved.KeepAllHistory, DateTime.Now);
+            if (Program.Smoke == null && unreadableNotice == null) Retention.Sweep(Brain.TranscriptPath, Path.Combine(folder, "chat.json"), Saved.KeepAllHistory, DateTime.Now);
             Limbs.Attach(Brain);
             StartAwake();
             Hands.Look = LookAt;
