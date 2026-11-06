@@ -850,6 +850,7 @@ namespace CapriDesktop
         [DataMember] public int ReplyLength;
         // Remember our chats is on by default: transcripts and memories.md stay on this PC.
         [DataMember] public bool Remembers = true;
+        [DataMember] public bool KeepAllHistory;
         [DataMember] public bool ClipGames;
         [DataMember] public bool ClipMoments;
         [DataMember] public string ClipFolder;
@@ -2370,6 +2371,7 @@ namespace CapriDesktop
             Brain.Digging = !smoke;
             if (!smoke) Brain.Keeper = brain;
             if (!smoke) brain.Load(Path.Combine(data, "chat.json"));
+            if (!smoke) Retention.Sweep(Brain.TranscriptPath, Path.Combine(data, "chat.json"), preferences.KeepAllHistory, DateTime.Now);
             Voice.Loudness = Math.Max(0, Math.Min(150, preferences.Volume));
             VoiceFx.Pitch = Math.Max(-VoiceFx.MostPitch, Math.Min(VoiceFx.MostPitch, preferences.VoicePitch));
             VoiceFx.Speed = Math.Max(VoiceFx.Slowest, Math.Min(VoiceFx.Fastest, preferences.VoiceSpeed));
